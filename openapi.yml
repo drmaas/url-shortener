@@ -1,0 +1,101 @@
+openapi: 3.0.3
+info:
+  title: URL Shortening Service API
+  version: 1.0.0
+servers:
+  - url: https://{restapi_id}.execute-api.{region}.amazonaws.com/{stage} # Replace placeholders
+paths:
+  /url:
+    post:
+      summary: Shorten a URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                longUrl:
+                  type: string
+                  format: url
+                  description: The URL to shorten
+              required:
+                - longUrl
+      responses:
+        '200':
+          description: Successful URL shortening
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shortUrl:
+                    type: string
+                    description: The shortened URL
+        '400':
+          description: Bad Request (invalid URL)
+  /{shortCode}:
+    get:
+      summary: Redirect to the original URL
+      parameters:
+        - in: path
+          name: shortCode
+          schema:
+            type: string
+          required: true
+          description: The short code
+      responses:
+        '301':
+          description: Redirect to the original URL
+        '404':
+          description: Short code not found
+  /url/{shortCode}:
+    get:
+      summary: Get the original URL
+      parameters:
+        - in: path
+          name: shortCode
+          schema:
+            type: string
+          required: true
+          description: The short code
+      responses:
+        '200':
+          description: Successful retrieval of original url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  longUrl:
+                    type: string
+                    description: The original URL
+        '404':
+          description: Short code not found
+  /stats/{shortCode}:
+    get:
+      summary: Get click statistics for a short code
+      parameters:
+        - in: path
+          name: shortCode
+          schema:
+            type: string
+          required: true
+          description: The short code
+      responses:
+        '200':
+          description: Successful retrieval of click statistics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    clicks:
+                        type: integer
+                        description: Number of clicks
+                    lastClicked:
+                        type: string
+                        format: date-time
+                        description: Time of last click
+        '404':
+          description: Short code not found

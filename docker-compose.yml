@@ -1,0 +1,25 @@
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./dynamodb_data:/home/dynamodblocal/data # Persist data (optional)
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data" # Important for persistence
+    healthcheck: # Check if dynamodb is running
+      test: ["CMD-SHELL", "curl -s http://localhost:8000/shell || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  dynamodb-admin: 
+    image: "aaronshaf/dynamodb-admin"
+    container_name: dynamodb-admin
+    depends_on:
+      - dynamodb-local
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb-local:8000
