@@ -9,7 +9,7 @@ class FakeDynamoDBRepository:
         self.data = {}
 
     def put_item(self, Item):
-        self.data[Item["short_code"]] = Item
+        self.data[Item["shortCode"]] = Item
 
     def get_item(self, key):
         if key in self.data:
@@ -17,9 +17,9 @@ class FakeDynamoDBRepository:
         return None
 
     def update_item(self, Key, UpdateExpression, ExpressionAttributeValues):
-        if Key["short_code"] in self.data:
-            clicks = self.data[Key["short_code"]]["clicks"]
-            self.data[Key["short_code"]]["clicks"] = clicks + 1
+        if Key["shortCode"] in self.data:
+            clicks = self.data[Key["shortCode"]]["clicks"]
+            self.data[Key["shortCode"]]["clicks"] = clicks + 1
             
 @pytest.fixture
 def fake_dynamodb_repository():
@@ -52,11 +52,11 @@ def test_shorten_url_success(test_client, fake_dynamodb_repository, example_long
     assert "shortUrl" in data
     assert data["shortUrl"] == f"http://testserver/{example_short_code}" # Use testserver
     assert example_short_code in fake_dynamodb_repository.data
-    assert fake_dynamodb_repository.data[example_short_code]["long_url"] == example_long_url
+    assert fake_dynamodb_repository.data[example_short_code]["longUrl"] == example_long_url
     random.choices = original_choices
 
 def test_redirect_url_success(test_client, fake_dynamodb_repository, example_long_url, example_short_code):
-    fake_dynamodb_repository.put_item({"short_code": example_short_code, "long_url": example_long_url, "created_at": 1, "clicks": 0, "custom": False})
+    fake_dynamodb_repository.put_item({"shortCode": example_short_code, "longUrl": example_long_url, "createdAt": 1, "clicks": 0, "custom": False})
     response = test_client.get(f"/{example_short_code}", follow_redirects=False)
     assert response.status_code == 307
     assert response.headers["location"] == example_long_url
@@ -68,7 +68,7 @@ def test_redirect_url_not_found(test_client):
     assert b"Short code not found" in response.content
 
 def test_get_original_url_success(test_client, fake_dynamodb_repository, example_long_url, example_short_code):
-    fake_dynamodb_repository.put_item({"short_code": example_short_code, "long_url": example_long_url, "created_at": 1, "clicks": 0, "custom": False})
+    fake_dynamodb_repository.put_item({"shortCode": example_short_code, "longUrl": example_long_url, "createdAt": 1, "clicks": 0, "custom": False})
     response = test_client.get(f"/url/{example_short_code}")
     data = response.json()
     assert response.status_code == 200
@@ -79,7 +79,7 @@ def test_get_original_url_not_found(test_client):
     assert response.status_code == 404
 
 def test_get_click_stats_success(test_client, fake_dynamodb_repository, example_short_code):
-    fake_dynamodb_repository.put_item({"short_code": example_short_code, "long_url": "example.com", "created_at": 1, "clicks": 5, "custom": False})
+    fake_dynamodb_repository.put_item({"shortCode": example_short_code, "longUrl": "example.com", "createdAt": 1, "clicks": 5, "custom": False})
     response = test_client.get(f"/stats/{example_short_code}")
     data = response.json()
     assert response.status_code == 200
@@ -90,7 +90,7 @@ def test_get_click_stats_not_found(test_client):
     assert response.status_code == 404
 
 def test_shorten_url_collision(test_client, fake_dynamodb_repository, example_long_url, example_short_code):
-    fake_dynamodb_repository.put_item({"short_code": example_short_code, "long_url": "existing_url", "created_at": 1, "clicks": 0, "custom": False})
+    fake_dynamodb_repository.put_item({"shortCode": example_short_code, "longUrl": "existing_url", "createdAt": 1, "clicks": 0, "custom": False})
     import random
     original_choices = random.choices
     random.choices = MagicMock(side_effect=[list(example_short_code), list("bcdefghi")])
